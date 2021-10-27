@@ -34,7 +34,6 @@ code {
 #container {
   background-color: #1f1c1f;
   padding: 25px;
-  border: solid green;
   width: 900px;
 }
 
@@ -66,7 +65,7 @@ input {
   font-size: 16px;
 }
 
-input[type=submit] {
+input[type="submit"] {
   font-size: 16px;
   border-radius: 3px;
   background-color: #e4f1fe;
@@ -75,7 +74,7 @@ input[type=submit] {
   cursor: pointer;
 }
 
-input[type=submit]:hover {
+input[type="submit"]:hover {
   background-color: #fffec4;
 }
 
