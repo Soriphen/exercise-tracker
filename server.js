@@ -41,12 +41,14 @@ let User = new model("user", userSchema);
 /* You can POST to /api/users with form data username to create a new user. */
 function postUser(req, res) {
   let newUser = new User({ username: req.body.username });
+
   newUser.save((error, savedUser) => {
-    if (!savedUser) {
-      throw new Error("savedUser is undefined");
+    if (savedUser == false) {
+      return res.status(404).json({ error: "savedUser is undefined" });
     }
-    if (error) {
-      return console.log(error.message);
+    if (error && error.code === 11000) {
+      // 11000 is the error code for duplicates in MongoDB
+      return res.json({ error: "duplicate key error" });
     }
 
     res.json({ username: savedUser.username, _id: savedUser._id });
@@ -57,8 +59,8 @@ function getUser(req, res) {
   User.find({})
     .select("-__v")
     .exec((error, usersArr) => {
-      if (!usersArr) {
-        throw new Error("usersArr is undefined");
+      if (usersArr == false) {
+        return res.status(404).json({ error: "usersArr is undefined" });
       }
 
       if (error) {
@@ -108,7 +110,7 @@ function getLog(req, res) {
 
   User.findById(userId)
     .then((result) => {
-      if (!result) {
+      if (result == false) {
         return res.status(404).json({ error: "Not found" });
       }
       // The result document object is converted to JSON to allow modifications
@@ -119,15 +121,20 @@ function getLog(req, res) {
         result.log = result.log.slice(0, req.query.limit);
       }
 
-      /* from and to queries */
-      let newLog = result.log.filter((log) => {
-        return log.date >= dateFrom && log.date <= dateTo;
-      });
+      /* from and to queries along with converting log date to dateString */
+      let newLog = result.log
+        .filter((log) => {
+          return log.date >= dateFrom && log.date <= dateTo;
+        })
+        .map((log) => {
+          let logCopy = { ...log };
+          logCopy.date = new Date(log.date).toDateString();
+          return logCopy;
+        });
 
       result.log = newLog;
 
       result.count = result.log.length;
-
       res.json(result);
     })
     .catch((error) => {
